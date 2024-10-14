@@ -14,10 +14,13 @@ app.prepare().then(() => {
   const io = new Server(httpServer);
 
   io.on("connection", (socket) => {
+    socket.on("joinRoom", (roomId) => {
+      socket.join(roomId);
+    });
 
-    socket.on("input-change", (msg) => {
+    socket.on("input-change", (roomId, msg) => {
       // 發送回客戶端更新
-      socket.broadcast.emit("update-input", msg);  // 改為 broadcast.emit 發送給所有連接者
+      socket.to(roomId).emit("update-input", msg);
     });
   });
 

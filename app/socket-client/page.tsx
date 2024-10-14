@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { socket } from "../../socket";
+import MessageContainer from "@/src/components/message-container/message-container";
 
 export default function Home() {
-  const [text, setText] = useState(""); //打字的值
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
   const [curRoom, setCurRoom] = useState("");
   const [roomInputVal, setRoomInputVal] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
+  const [text, setText] = useState(""); //打字的值
 
   useEffect(() => {
     if (socket.connected) {
       onConnect();
 
-      socket.on("update-input", (msg) => {
-        console.log(msg)
-        setText(msg);
+      socket.on("update-message-list", (msg) => {
+        console.log(msg);
+        setMessages((prev) => [...prev, msg]);
       });
     }
 
@@ -40,13 +42,19 @@ export default function Home() {
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("update-message-list");
     };
   }, []);
 
   function handleChange(val: string) {
     setText(val);
-    console.log(curRoom,val)
-    socket.emit("input-change", curRoom, val);
+  }
+
+  function handleSendMessage() {
+    setMessages((prev) => [...prev, text]);
+    setText("");
+
+    socket.emit("send-message", curRoom, text);
   }
 
   function handleJoinRoom() {
@@ -70,12 +78,18 @@ export default function Home() {
           change room
         </button>
       </div>
-      <input
-        className="text-black p-1"
-        value={text}
-        type="text"
-        onChange={(e) => handleChange(e.target.value)}
-      />
+      <MessageContainer messages={messages} />
+      <div className="flex gap-2 py-2">
+        <input
+          className="text-black p-1"
+          value={text}
+          type="text"
+          onChange={(e) => handleChange(e.target.value)}
+        />
+        <button className="p-1 bg-red-500" onClick={handleSendMessage}>
+          send
+        </button>
+      </div>
     </div>
   );
 }

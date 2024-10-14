@@ -18,9 +18,9 @@ app.prepare().then(() => {
       socket.join(roomId);
     });
 
-    socket.on("input-change", (roomId, msg) => {
+    socket.on("send-message", (roomId, msg) => {
       // 發送回客戶端更新
-      socket.to(roomId).emit("update-input", msg);
+      socket.to(roomId).emit("update-message-list", msg);
     });
   });
 
